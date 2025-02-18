@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问答系统</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>问答系统</h1>
+    <input type="text" id="question" placeholder="请输入你的问题">
+    <button onclick="getAnswer()">提问</button>
+    <div id="result"></div>
+    <div id="feedback" style="display: none;">
+        <label for="satisfaction">你对这个回答满意吗？（满意/不满意）</label>
+        <input type="text" id="satisfaction">
+        <button onclick="submitFeedback()">提交反馈</button>
+    </div>
+
+    <script>
+        function getAnswer() {
+            var question = $('#question').val();
+            $.ajax({
+                url: '/get_answer/',
+                method: 'POST',
+                data: {
+                    'question': question,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    $('#result').html('分词结果：' + response.words.join(', ') + '<br>系统回答：' + response.answer);
+                    $('#feedback').show();
+                    $('#question').data('answer', response.answer);
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        function submitFeedback() {
+            var question = $('#question').val();
+            var answer = $('#question').data('answer');
+            var feedback = $('#satisfaction').val();
+            $.ajax({
+                url: '/submit_feedback/',
+                method: 'POST',
+                data: {
+                    'question': question,
+                    'answer': answer,
+                    'feedback': feedback,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    alert(response.message);
+                    $('#feedback').hide();
+                    $('#question').val('');
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
